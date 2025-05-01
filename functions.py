@@ -1,4 +1,6 @@
 import pygame
+from random import randint
+
 class Laser:
     def __init__(self, x0, y0, width, height, speed, frame_paths, frame_duration=100):
         """
@@ -19,7 +21,8 @@ class Laser:
         self.speed = speed
         self.angle = 0
         self.x, self.y = x0, y0
-
+        self.last_offset_time = pygame.time.get_ticks()
+        self.offset = 0
         # load animation frames
         self.frames = [pygame.image.load(path).convert_alpha() for path in frame_paths]
         self.frame_duration = frame_duration
@@ -27,31 +30,32 @@ class Laser:
         self.last_frame_time = pygame.time.get_ticks()
 
     def update(self, dt):
-        # advance along perimeter
-        self.pos = (self.pos + self.speed * dt / 1000) % self.perim
+        now = pygame.time.get_ticks()
 
-        # compute position and inward angle
+        if now - self.last_offset_time >= 1500:
+            self.offset = randint(10, 90)
+            self.last_offset_time = now
+
+        self.pos = (self.pos + self.speed * dt / 1000) % self.perim
         p = self.pos
-        # inward angles: top->down(90), right->left(180), bottom->up(270), left->right(0)
+
         if p < self.w:
             self.x = self.x0 + p
-            self.y = self.y0
+            self.y = self.y0 + self.offset
             self.angle = 90
         elif p < self.w + self.h:
-            self.x = self.x0 + self.w
+            self.x = self.x0 + self.w - self.offset
             self.y = self.y0 + (p - self.w)
             self.angle = 0
         elif p < 2 * self.w + self.h:
             self.x = self.x0 + (self.w - (p - self.w - self.h))
-            self.y = self.y0 + self.h
+            self.y = self.y0 + self.h - self.offset
             self.angle = 270
         else:
-            self.x = self.x0
+            self.x = self.x0 + self.offset
             self.y = self.y0 + (self.h - (p - 2 * self.w - self.h))
             self.angle = 180
 
-        # update animation frame
-        now = pygame.time.get_ticks()
         if now - self.last_frame_time >= self.frame_duration:
             self.current_frame = (self.current_frame + 1) % len(self.frames)
             self.last_frame_time = now

@@ -61,8 +61,9 @@ lives_c = 3
 he_x = 20
 # laser pashalko))))))))))))))))
 laser_list = [f'laser/frame-{i}.gif' for i in range(1, 5)]
-laser = Laser(50, 50, 660, 380, 150, laser_list, 130)
+laser = Laser(0, 0, 900, 600, 150, laser_list, 130)
 colider_fl = False
+new_laser = 0
 # Игровой цикл и флаг выполнения программы
 laser_fl = False
 game_run = True
@@ -168,6 +169,10 @@ while game_run:
             lives_c -= 1
             laser_fl = False
             colider_fl = True
+            new_laser = current_time
+
+        if current_time - new_laser >= 3700:
+            colider_fl = False
         screen.blit(bg_game, (0, 0))
         screen.blit(squares_game, (0, 0))
         screen.blit(spider_list[num_frame_spider], (800, 0))
