@@ -2,7 +2,7 @@ import pygame
 from random import randint
 
 class Laser:
-    def __init__(self, x0, y0, width, height, speed, frame_paths, frame_duration=100):
+    def __init__(self, x0, y0, width, height, speed, frame_paths, laser_shift_sound : pygame.mixer.Sound, frame_duration=100):
         """
         ооочень сложный лазер
 
@@ -11,6 +11,7 @@ class Laser:
         :param width, height: dimensions of rectangle perimeter path
         :param speed: pixels per second along perimeter
         :param frame_paths: list of file paths for laser animation frames
+        :param laser_shift_sound: sound of laser's shot
         :param frame_duration: ms to display each frame
         """
         # perimeter path
@@ -23,6 +24,8 @@ class Laser:
         self.x, self.y = x0, y0
         self.last_offset_time = pygame.time.get_ticks()
         self.offset = 0
+        self.laser_sound = laser_shift_sound
+
         # load animation frames
         self.frames = [pygame.image.load(path).convert_alpha() for path in frame_paths]
         self.frame_duration = frame_duration
@@ -30,10 +33,13 @@ class Laser:
         self.last_frame_time = pygame.time.get_ticks()
 
     def update(self, dt):
-        now = pygame.time.get_ticks()
 
-        if now - self.last_offset_time >= 1500:
-            self.offset = randint(10, 90)
+        now = pygame.time.get_ticks()
+        if now - self.last_offset_time >= 1800:
+            new_offset = randint(10, 90)
+            if new_offset - self.offset >= 10:  # Воспроизводим звук только если значение увеличилось на значение больщее 9
+                self.laser_sound.play()
+            self.offset = new_offset
             self.last_offset_time = now
 
         self.pos = (self.pos + self.speed * dt / 1000) % self.perim
@@ -61,11 +67,64 @@ class Laser:
             self.last_frame_time = now
 
     def draw(self, surface):
-        # get current frame and rotate
         frame = self.frames[self.current_frame]
         rotated = pygame.transform.rotate(frame, self.angle)
         rect = rotated.get_rect(center=(self.x, self.y))
         surface.blit(rotated, rect.topleft)
+
+
+class Player:
+    def __init__(self, ghost_frames, heart_frames, x, y, speed, lives, screen, bounds : list, dead_img):
+        self.ghost_frames = [pygame.image.load(f).convert_alpha() for f in ghost_frames]
+        self.heart_frames = [pygame.image.load(f).convert_alpha() for f in heart_frames]
+        self.x = x; self.y = y; self.speed = speed
+        self.lives = lives
+        self.screen = screen
+        self.current_ghost = 0; self.last_ghost_time = pygame.time.get_ticks()
+        self.ghost_slow = 100
+        self.width = self.ghost_frames[0].get_width()
+        self.height = self.ghost_frames[0].get_height()
+        self.bounds = bounds
+        self.current_heart = 0
+        self.dead = False
+        self.death_time = None
+        self.dead_img = pygame.image.load(dead_img)
+
+    def update(self, keys):
+        if not self.dead:
+            if keys[pygame.K_UP]:    self.y = max(self.bounds[1], self.y - self.speed)
+            if keys[pygame.K_DOWN]:  self.y = min(self.bounds[3] - self.height, self.y + self.speed)
+            if keys[pygame.K_LEFT]:  self.x = max(self.bounds[0], self.x - self.speed)
+            if keys[pygame.K_RIGHT]: self.x = min(self.bounds[2] - self.width, self.x + self.speed)
+        
+        now = pygame.time.get_ticks()
+        if now - self.last_ghost_time >= self.ghost_slow:
+            self.current_ghost = (self.current_ghost + 1) % len(self.ghost_frames)
+            self.last_ghost_time = now
+
+    def draw(self):
+        if not self.dead:
+            frame = self.ghost_frames[self.current_ghost]
+        else:
+            frame = self.dead_img
+        self.screen.blit(frame, (self.x, self.y))
+        for i in range(self.lives):
+            self.screen.blit(self.heart_frames[self.current_heart], (20 + i * (60 + 5), 20))
+
+    def minus_life(self, laser: Laser):
+        laser_rect = pygame.transform.rotate(laser.frames[laser.current_frame], laser.angle).get_rect(center=(laser.x, laser.y))
+        player_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        if player_rect.colliderect(laser_rect):
+            return True
+        return False
+
+    def die(self):
+        if not self.dead or self.death_time is None:
+            return False
+        now = pygame.time.get_ticks()
+        if now - self.death_time >= 2000:
+            return True
+        return False
 
 
 
