@@ -37,12 +37,15 @@ class Laser:
         now = pygame.time.get_ticks()
         if now - self.last_offset_time >= 1800:
             new_offset = randint(10, 90)
-            if new_offset - self.offset >= 10:  # Воспроизводим звук только если значение увеличилось на значение больщее 9
+            if abs(new_offset - self.offset) >= 15:  # Воспроизводим звук только если значение увеличилось на значение больщее 9
                 self.laser_sound.play()
             self.offset = new_offset
             self.last_offset_time = now
 
+        previous_pos = self.pos
         self.pos = (self.pos + self.speed * dt / 1000) % self.perim
+        if self.pos < previous_pos:  
+            self.speed = randint(140, 200)
         p = self.pos
 
         if p < self.w:
@@ -127,8 +130,35 @@ class Player:
         return False
 
 
-
-
+class Squares:
+    def __init__(self, sq_list : list, screen : pygame.Surface):
+        self.square_list = sq_list
+        self.check_btn = pygame.image.load('imgs/check.png')
+        self.check_btn = pygame.transform.smoothscale_by(self.check_btn, 0.18)
+        self.sc = screen
+        self.btn_fl = False
+        self.work_fl = True
+        self.square_for_check = None
+    def check_player(self, player : Player):
+        i = 0
+        for sq in self.square_list:
+            if (player.x >= sq[0] and player.x <= sq[0] + 100) and (player.y >= sq[1] and player.y <= sq[1] + 100):
+                self.btn_fl = True
+                self.square_for_check = i
+                break
+            i += 1
+    def blit_btn(self):
+        if self.btn_fl and self.work_fl:
+            self.sc.blit(self.check_btn, (70, self.sc.get_height() - self.check_btn.get_height() - 18))  
+            self.btn_fl = False
+            
+    def check_square(self, keys):
+        if self.square_for_check is None:
+            return
+        self.sc.blit()
+        
+        
+        
 def render_text_with_outline(text : str, font : pygame.font.Font, text_color : tuple, outline_color: tuple, outline_width=1):
     """
     Рендерит текст с обводкой.

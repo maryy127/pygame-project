@@ -43,7 +43,6 @@ header_r = font1.render('правила игры'.upper(), True, (220, 72, 161))
 text_rules_list = render_wrapped_text(w, header_r.get_height() + 70, f'Привет, {name}! Сегодня тебе предстоит сыграть в увлекательную игру. Тут тебе предстоит пройти три уровня, на каждом из которых ты должен будешь найти трофей, используя магическую силу рандома. Трофей располагается только в двух квадратах из 15! У тебя есть всего три жизни для каждого из уровней. Также иногда могут появлятся пасхалки, берегись их, они опасны. Ну что же, начинаем!', rules_font1, (230, 168, 199), 880, 19, (191, 0, 255), 1)
 press_to_c = font2.render('press any key to start the game'.upper(), True, (255, 255, 255))
 press_y = text_rules_list[-1][1][1] + text_rules_list[-1][0].get_height() + 47
-print(text_rules_list)
 
 #game imgs
 bg_rules = pygame.image.load('imgs/rules_bg.jpg')
@@ -74,9 +73,21 @@ new_laser = 0
 laser_fl = False
 laser_start_time = 0
 game_start_time = 0
+wait_laser = randint(1600, 3000)
+#squares
+sq_list = []
+x_sq, y_sq = 140, 100
+for lines in range(3):
+    for sq in range(5):
+        sq_list.append([x_sq, y_sq])
+        x_sq += 140
+    x_sq = 140
+    y_sq += 140
+    
+squares = Squares(sq_list, screen)
 
 # Игровой цикл и флаг выполнения программы
-state = 'loading'
+state = 'game'
 game_run = True
 
 while game_run:
@@ -97,6 +108,8 @@ while game_run:
                     new_laser = 0
                     laser_fl = False
                     game_start_time = current_time
+                    wait_laser = randint(1600, 3000)
+                    squares = Squares(sq_list, screen)
                     state = 'game'
 
     if state == 'loading':
@@ -162,8 +175,12 @@ while game_run:
 
         # move pers
         player.update(keys)
+
+        #squares
+        squares.check_player(player)
+
         # laser
-        if current_time - game_start_time >= 3000 and not colider_fl:
+        if current_time - game_start_time >= wait_laser and not colider_fl:
             laser.update(dt)
             laser_fl=True
 
@@ -180,6 +197,7 @@ while game_run:
                         state = 'game_over'
                 else:
                     player.dead = True
+                    squares.work_fl = False
                     player.death_time = pygame.time.get_ticks()
                     death_sound.play()
 
@@ -193,6 +211,7 @@ while game_run:
         player.draw()
         if laser_fl and not colider_fl:
             laser.draw(screen)
+        squares.blit_btn()
     
     elif state == 'game_over':
         screen.fill((213, 52, 100))
