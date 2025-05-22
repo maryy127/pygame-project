@@ -79,7 +79,7 @@ class Laser:
 class Player:
     def __init__(self, ghost_frames, heart_frames, x, y, speed, lives, screen, bounds : list, dead_img):
         self.ghost_frames = [pygame.image.load(f).convert_alpha() for f in ghost_frames]
-        self.heart_frames = [pygame.image.load(f).convert_alpha() for f in heart_frames]
+        self.heart_frames = [pygame.transform.scale(pygame.image.load(f).convert_alpha(), (50, 50)) for f in heart_frames]
         self.x = x; self.y = y; self.speed = speed
         self.lives = lives
         self.screen = screen
@@ -92,6 +92,7 @@ class Player:
         self.dead = False
         self.death_time = None
         self.dead_img = pygame.image.load(dead_img)
+        self.death_s = pygame.mixer.Sound("sfx/player_die.wav")
 
     def update(self, keys):
         if not self.dead:
@@ -112,7 +113,7 @@ class Player:
             frame = self.dead_img
         self.screen.blit(frame, (self.x, self.y))
         for i in range(self.lives):
-            self.screen.blit(self.heart_frames[self.current_heart], (20 + i * (60 + 5), 20))
+            self.screen.blit(self.heart_frames[self.current_heart], (15 + i * (50 + 5), 20))
 
     def minus_life(self, laser: Laser):
         laser_rect = pygame.transform.rotate(laser.frames[laser.current_frame], laser.angle).get_rect(center=(laser.x, laser.y))
@@ -128,7 +129,8 @@ class Player:
         if now - self.death_time >= 2000:
             return True
         return False
-
+    def death_sound(self):
+        self.death_s.play()
 
 class Squares:
     def __init__(self, sq_list : list, screen : pygame.Surface):
@@ -139,23 +141,89 @@ class Squares:
         self.btn_fl = False
         self.work_fl = True
         self.square_for_check = None
+        self.y = self.sc.get_height() - self.check_btn.get_height() - 18
+        self.last_time = None
+        self.cats = []
+        self.cat = pygame.image.load('imgs/cat.png')
+        self.cat_fl = False
+        self.bg_cat = pygame.image.load('imgs/bg_cat.png')
+        self.bg_cat = pygame.transform.scale(self.bg_cat, (900, 600))
+        self.pop_fl = False
+        self.cat_st = None
+        self.visited_pas = []
+        self.level_complete = False
+        self.pas = []
+        c_cats = 0
+        c_not = 0
+        self.found_cats = [] 
+        exp = []
+        while c_cats != 5:
+            r = randint(0, 14)
+            if r not in exp:
+                self.cats.append(r)
+                exp.append(r)
+                c_cats += 1
+        while c_not != 10:
+            r = randint(0, 14)
+            if r not in exp:
+                self.pas.append(r)
+                exp.append(r)
+                c_not += 1
+        print(self.cats, self.pas)
     def check_player(self, player : Player):
         i = 0
         for sq in self.square_list:
             if (player.x >= sq[0] and player.x <= sq[0] + 100) and (player.y >= sq[1] and player.y <= sq[1] + 100):
-                self.btn_fl = True
-                self.square_for_check = i
-                break
+                if sq not in self.visited_pas and sq not in self.found_cats:
+                    self.btn_fl = True
+                    self.square_for_check = i
+                    break
             i += 1
     def blit_btn(self):
         if self.btn_fl and self.work_fl:
-            self.sc.blit(self.check_btn, (70, self.sc.get_height() - self.check_btn.get_height() - 18))  
+            self.sc.blit(self.check_btn, (70, self.y))  
             self.btn_fl = False
             
-    def check_square(self, keys):
+    def check_square(self, time, player : Player):
         if self.square_for_check is None:
             return
-        self.sc.blit()
+
+        if self.last_time is None or time - self.last_time >= 400:
+            self.last_time = time
+            if self.square_for_check in self.cats:
+                self.cat_fl = True
+                self.found_cats.append(self.square_for_check) 
+                self.cats.remove(self.square_for_check)  
+                print('cat', self.square_for_check)
+                if not self.cats: 
+                    self.level_complete = True
+            elif self.square_for_check in self.pas:
+                player.lives -= 1
+                player.death_sound()
+                self.visited_pas.append(self.square_for_check)
+                self.pas.remove(self.square_for_check)
+                print('bad', self.square_for_check)
+            else:
+                print('empty', self.square_for_check)
+
+
+    def draw_cat(self, player : Player, time):
+        if self.cat_fl:
+            self.sc.blit(self.bg_cat, (0, 0))
+
+            if self.cat_st is None:
+                self.cat_st = time
+            if time - self.cat_st >= 3000:
+                self.cat_fl = False
+                self.square_for_check = None
+                self.cat_st = None
+
+    def draw(self):
+        for i, sq in enumerate(self.square_list):
+            if i in self.found_cats:
+                pygame.draw.rect(self.sc, (0, 255, 0), (sq[0], sq[1], 100, 100))  # Зеленый для котов
+            elif i in self.visited_pas:
+                pygame.draw.rect(self.sc, (0, 0, 0), (sq[0], sq[1], 100, 100))  # Черный для плохих квадратов
         
         
         

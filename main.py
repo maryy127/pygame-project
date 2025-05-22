@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pygame
 from time import sleep
 from functions import *
@@ -40,7 +41,7 @@ time_loaded_added = False
 #rules
 rules_font1 = pygame.font.Font('fonts/Comfortaa.ttf', 24)
 header_r = font1.render('правила игры'.upper(), True, (220, 72, 161))
-text_rules_list = render_wrapped_text(w, header_r.get_height() + 70, f'Привет, {name}! Сегодня тебе предстоит сыграть в увлекательную игру. Тут тебе предстоит пройти три уровня, на каждом из которых ты должен будешь найти трофей, используя магическую силу рандома. Трофей располагается только в двух квадратах из 15! У тебя есть всего три жизни для каждого из уровней. Также иногда могут появлятся пасхалки, берегись их, они опасны. Ну что же, начинаем!', rules_font1, (230, 168, 199), 880, 19, (191, 0, 255), 1)
+text_rules_list = render_wrapped_text(w, header_r.get_height() + 70, f'Привет, {name}! Сегодня тебе предстоит сыграть в увлекательную игру. Тут тебе предстоит найти трофей, используя магическую силу рандома. Трофей располагается только в пяти квадратах из 15! У тебя есть всего пять жизней. Также тут есть злой лазер из королевства Меднобыковского, берегись eгo, он опасен. Hy что же, начинаем!', rules_font1, (230, 168, 199), 880, 19, (191, 0, 255), 1)
 press_to_c = font2.render('press any key to start the game'.upper(), True, (255, 255, 255))
 press_y = text_rules_list[-1][1][1] + text_rules_list[-1][0].get_height() + 47
 
@@ -63,7 +64,7 @@ spider_list = [pygame.image.load(f'spider/frame-{i}.gif') for i in range(1, 9)]
 ghost_list = [f'ghost/frame-{i}.gif' for i in range(1, 13)]
 heart_list = [f'pixel_heart/frame-{i}.gif' for i in range(1, 10)]
 
-player = Player(ghost_list, heart_list, 150, 115, 9, 3, screen, [140, 100, 800, 480], 'imgs/dead_player.png')
+player = Player(ghost_list, heart_list, 150, 115, 9, 5, screen, [140, 100, 800, 480], 'imgs/dead_player.png')
 
 # laser)
 laser_list = [f'laser/frame-{i}.gif' for i in range(1, 5)]
@@ -74,6 +75,7 @@ laser_fl = False
 laser_start_time = 0
 game_start_time = 0
 wait_laser = randint(1600, 3000)
+
 #squares
 sq_list = []
 x_sq, y_sq = 140, 100
@@ -85,7 +87,10 @@ for lines in range(3):
     y_sq += 140
     
 squares = Squares(sq_list, screen)
+check_btn_fl = False
 
+# win
+win_text = font1.render('УРА ПОБЕДА!', True, (255, 215, 0))
 # Игровой цикл и флаг выполнения программы
 state = 'game'
 game_run = True
@@ -99,11 +104,16 @@ while game_run:
         if event.type == pygame.QUIT:
             game_run = False
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if state == 'game':
+                pos = pygame.mouse.get_pos()
+                if (pos[0] >= 70 and pos[0] <= 70 + squares.check_btn.get_width()) and (pos[1] >= squares.y and pos[1] <= squares.y + squares.check_btn.get_height()):
+                    check_btn_fl = True
             if state == 'game_over':
                 pos = pygame.mouse.get_pos()
                 if (pos[0] >= w / 2 - 50 and pos[0] <= w / 2 - 50 + 100) and (pos[1] >= 400 and pos[1] <= 500):
-                    player = Player(ghost_list, heart_list, 150, 115, 9, 3, screen, [140, 100, 800, 480], 'imgs/dead_player.png')
+                    player = Player(ghost_list, heart_list, 150, 115, 9, 5, screen, [140, 100, 800, 480], 'imgs/dead_player.png')
                     laser = Laser(0, 0, 900, 600, 150, laser_list, laser_shift_sound, 130)
+                    squares = Squares(sq_list, screen)
                     colider_fl = False
                     new_laser = 0
                     laser_fl = False
@@ -177,14 +187,18 @@ while game_run:
         player.update(keys)
 
         #squares
-        squares.check_player(player)
+        if not squares.cat_fl:
+            squares.check_player(player)
+        if check_btn_fl and not squares.cat_fl:
+            squares.check_square(current_time, player)
+            check_btn_fl = False
 
         # laser
-        if current_time - game_start_time >= wait_laser and not colider_fl:
+        if (current_time - game_start_time >= wait_laser) and (not colider_fl) and (not squares.cat_fl) and (not player.dead):
             laser.update(dt)
             laser_fl=True
 
-        if player.minus_life(laser) and not colider_fl and not player.dead:
+        if player.minus_life(laser) and (not colider_fl) and (not player.dead) and (not squares.cat_fl):
             player.lives -= 1
             death_sound.play()
             laser_fl = False
@@ -207,16 +221,28 @@ while game_run:
 
         screen.blit(bg_game, (0, 0))
         screen.blit(squares_game, (0, 0))
+        squares.draw()
         screen.blit(spider_list[num_frame_spider], (800, 0))
         player.draw()
-        if laser_fl and not colider_fl:
+
+        if laser_fl and not colider_fl and (not squares.cat_fl) and (not player.dead):
             laser.draw(screen)
         squares.blit_btn()
-    
+        if squares.cat_fl:
+            squares.draw_cat(player, current_time)
+        if squares.level_complete:
+            state = 'level_complete'
+
     elif state == 'game_over':
         screen.fill((213, 52, 100))
         screen.blit(game_over, (0, 0))
         screen.blit(restart_btn, (w / 2 - 50, 400))
+
+    elif state == 'level_complete':
+        screen.fill((50, 168, 82))  # Зеленый фон для победы
+        screen.blit(win_text, (w / 2 - win_text.get_width() / 2, 200))
+        screen.blit(restart_btn, (w / 2 - 50, 400))
+
 
     pygame.display.flip() 
 
