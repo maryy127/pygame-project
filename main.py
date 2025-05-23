@@ -108,7 +108,7 @@ while game_run:
                 pos = pygame.mouse.get_pos()
                 if (pos[0] >= 70 and pos[0] <= 70 + squares.check_btn.get_width()) and (pos[1] >= squares.y and pos[1] <= squares.y + squares.check_btn.get_height()):
                     check_btn_fl = True
-            if state == 'game_over':
+            if state == 'game_over' or state == 'level_complete':
                 pos = pygame.mouse.get_pos()
                 if (pos[0] >= w / 2 - 50 and pos[0] <= w / 2 - 50 + 100) and (pos[1] >= 400 and pos[1] <= 500):
                     player = Player(ghost_list, heart_list, 150, 115, 9, 5, screen, [140, 100, 800, 480], 'imgs/dead_player.png')
@@ -119,7 +119,6 @@ while game_run:
                     laser_fl = False
                     game_start_time = current_time
                     wait_laser = randint(1600, 3000)
-                    squares = Squares(sq_list, screen)
                     state = 'game'
 
     if state == 'loading':
@@ -221,16 +220,17 @@ while game_run:
 
         screen.blit(bg_game, (0, 0))
         screen.blit(squares_game, (0, 0))
-        squares.draw()
+        squares.draw(current_time)
         screen.blit(spider_list[num_frame_spider], (800, 0))
         player.draw()
 
         if laser_fl and not colider_fl and (not squares.cat_fl) and (not player.dead):
             laser.draw(screen)
         squares.blit_btn()
+        squares.draw_bad_text(current_time)
         if squares.cat_fl:
-            squares.draw_cat(player, current_time)
-        if squares.level_complete:
+            squares.draw_cat(player, current_time, font1)
+        if squares.level_complete and not squares.cat_fl:
             state = 'level_complete'
 
     elif state == 'game_over':
@@ -239,7 +239,7 @@ while game_run:
         screen.blit(restart_btn, (w / 2 - 50, 400))
 
     elif state == 'level_complete':
-        screen.fill((50, 168, 82))  # Зеленый фон для победы
+        screen.fill((50, 168, 82))  
         screen.blit(win_text, (w / 2 - win_text.get_width() / 2, 200))
         screen.blit(restart_btn, (w / 2 - 50, 400))
 

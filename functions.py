@@ -143,9 +143,15 @@ class Squares:
         self.square_for_check = None
         self.y = self.sc.get_height() - self.check_btn.get_height() - 18
         self.last_time = None
+        self.bad_st = None
+        font_bad = pygame.font.Font('fonts/Handjet.ttf', 28)
+        self.bad_text = font_bad.render('Упс! Ты попал на плохой квадрат))', True, (0, 0, 0), (202, 179, 208))
+        self.bad_fl_text = False
         self.cats = []
-        self.cat = pygame.image.load('imgs/cat.png')
+        self.cats_frames = [pygame.transform.scale_by(pygame.image.load(f'cat/maxwell-cat-{i}.png'), 1.2) for i in range(187)]
         self.cat_fl = False
+        self.cat_frame = 0
+        self.anim_st_cat = None
         self.bg_cat = pygame.image.load('imgs/bg_cat.png')
         self.bg_cat = pygame.transform.scale(self.bg_cat, (900, 600))
         self.pop_fl = False
@@ -153,6 +159,7 @@ class Squares:
         self.visited_pas = []
         self.level_complete = False
         self.pas = []
+        self.found_text = None
         c_cats = 0
         c_not = 0
         self.found_cats = [] 
@@ -169,6 +176,8 @@ class Squares:
                 self.pas.append(r)
                 exp.append(r)
                 c_not += 1
+        self.cats.sort()
+        self.pas.sort()
         print(self.cats, self.pas)
     def check_player(self, player : Player):
         i = 0
@@ -194,36 +203,56 @@ class Squares:
                 self.cat_fl = True
                 self.found_cats.append(self.square_for_check) 
                 self.cats.remove(self.square_for_check)  
-                print('cat', self.square_for_check)
+                print(f'cat with index {self.square_for_check} and coords {self.square_list[self.square_for_check]}')
                 if not self.cats: 
                     self.level_complete = True
             elif self.square_for_check in self.pas:
+                self.bad_fl_text = True
                 player.lives -= 1
                 player.death_sound()
                 self.visited_pas.append(self.square_for_check)
                 self.pas.remove(self.square_for_check)
-                print('bad', self.square_for_check)
+                print(f'bad with index {self.square_for_check} and coords {self.square_list[self.square_for_check]}')
             else:
                 print('empty', self.square_for_check)
 
 
-    def draw_cat(self, player : Player, time):
+    def draw_cat(self, player : Player, time, font : pygame.font.Font):
         if self.cat_fl:
-            self.sc.blit(self.bg_cat, (0, 0))
 
             if self.cat_st is None:
                 self.cat_st = time
-            if time - self.cat_st >= 3000:
+                self.anim_st_cat = time
+                self.found_text = font.render(f'Найдено котов: {len(self.found_cats)} / 5', True, (244, 30, 23))
+            self.sc.blit(self.bg_cat, (0, 0))
+            self.sc.blit(self.cats_frames[self.cat_frame], (320, 230))
+            self.sc.blit(self.found_text, (900 / 2 - self.found_text.get_width() / 2, 500))
+            if time - self.anim_st_cat >= 90:
+                self.cat_frame = (self.cat_frame + 1) % 187
+                self.anim_st_cat = time
+
+            if time - self.cat_st >= 3100:
                 self.cat_fl = False
                 self.square_for_check = None
                 self.cat_st = None
+                self.cat_frame = 0
+                self.anim_st_cat = None
 
-    def draw(self):
+    def draw(self, time):
         for i, sq in enumerate(self.square_list):
             if i in self.found_cats:
-                pygame.draw.rect(self.sc, (0, 255, 0), (sq[0], sq[1], 100, 100))  # Зеленый для котов
+                pygame.draw.rect(self.sc, (0, 255, 0), (sq[0], sq[1], 100, 100)) 
             elif i in self.visited_pas:
-                pygame.draw.rect(self.sc, (0, 0, 0), (sq[0], sq[1], 100, 100))  # Черный для плохих квадратов
+                pygame.draw.rect(self.sc, (0, 0, 0), (sq[0], sq[1], 100, 100))  
+
+    def draw_bad_text(self, time):
+        if self.bad_fl_text:
+            if self.bad_st is None:
+                self.bad_st = time
+            self.sc.blit(self.bad_text, (900 - self.bad_text.get_width() - 40, 20))  
+            if time - self.bad_st >= 1700:
+                self.bad_fl_text = False
+                self.bad_st = None
         
         
         
