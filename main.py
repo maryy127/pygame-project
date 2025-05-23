@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import pygame
-from time import sleep
 from functions import *
-name = 'Маша'
-#name = input('Введите свое имя:  ')
+
+name = input('Введите свое имя:  ')
 name = name.capitalize()
 
 pygame.init()
@@ -16,7 +15,7 @@ death_sound = pygame.mixer.Sound("sfx/player_die.wav")
 w= 900  
 h = 600  
 screen = pygame.display.set_mode((w, h))
-pygame.display.set_caption('my game')
+pygame.display.set_caption('ghost game')
 icon = pygame.image.load('imgs/icon.png')
 pygame.display.set_icon(icon)
 # Создаём контроль FPS
@@ -26,7 +25,8 @@ FPS = 30  # Устанавливаем нужное значение FPS
 #loading state variables 
 font1 = pygame.font.Font('fonts/Handjet.ttf', 60)
 font2 = pygame.font.Font('fonts/Handjet.ttf', 34)
-wellcome = font1.render(f'WELLCOME {name.upper()}', True, (14, 88, 52))
+wellcome = font1.render(f'WELLCOME TO GHOST GAME', True, (14, 88, 52))
+logo = pygame.transform.scale(icon, (200, 200))
 visible_w = True
 last_blink_time = pygame.time.get_ticks()
 BLINK_INTERVAL = 400
@@ -92,7 +92,7 @@ check_btn_fl = False
 # win
 win_text = font1.render('УРА ПОБЕДА!', True, (255, 215, 0))
 # Игровой цикл и флаг выполнения программы
-state = 'game'
+state = 'loading'
 game_run = True
 
 while game_run:
@@ -128,7 +128,7 @@ while game_run:
             complete_fl = True
 
         screen.fill((73, 42, 72))
-
+        screen.blit(logo, (w / 2 - logo.get_width() / 2, 20))
         # wellcome
         if current_time - last_blink_time >= BLINK_INTERVAL:
             visible_w = not visible_w
@@ -140,16 +140,16 @@ while game_run:
             last_update_time = current_time
 
         if visible_w:
-            screen.blit(wellcome, ((w/2 - wellcome.get_width() / 2), 100))
-        pygame.draw.rect(screen, (39,72,0), (w / 2 - 250, 250, 500, 100), 7)
-        pygame.draw.rect(screen, (46,105,32), (w/2 - 250 + 10, 260, bar_x, 80))
+            screen.blit(wellcome, ((w/2 - wellcome.get_width() / 2), logo.get_height() + 20 + 20))
+        pygame.draw.rect(screen, (39,72,0), (w / 2 - 250, logo.get_height() + wellcome.get_height() + 20 + 20 + 30, 500, 100), 7)
+        pygame.draw.rect(screen, (46,105,32), (w/2 - 250 + 10, logo.get_height() + 20 + 20 + 30 + 10 + wellcome.get_height(), bar_x, 80))
         text_load = font2.render(text_display[:current_index], True, (255, 255, 255))
         if complete_fl:
             text_load = font2.render('LOADING COMPLETE!', True, (255, 100, 55))
 
-        screen.blit(text_load, ((w / 2 - text_load.get_width() / 2), 250 + text_load.get_height() + 100))
+        screen.blit(text_load, ((w / 2 - text_load.get_width() / 2), logo.get_height() + 20 + 20 + 30 + 10 + 30 + wellcome.get_height() * 2 + 30))
         if complete_fl:
-            screen.blit(wellcome, ((w/2 - wellcome.get_width() / 2), 100))
+            screen.blit(wellcome, ((w/2 - wellcome.get_width() / 2), logo.get_height() + 20 + 20))
             if not time_loaded_added:
                 game_start_sound.play()
                 time_loaded = current_time
@@ -242,6 +242,7 @@ while game_run:
         screen.fill((50, 168, 82))  
         screen.blit(win_text, (w / 2 - win_text.get_width() / 2, 200))
         screen.blit(restart_btn, (w / 2 - 50, 400))
+        
 
 
     pygame.display.flip() 
