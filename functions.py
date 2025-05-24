@@ -178,7 +178,6 @@ class Squares:
                 c_not += 1
         self.cats.sort()
         self.pas.sort()
-        print(self.cats, self.pas)
     def check_player(self, player : Player):
         i = 0
         for sq in self.square_list:
@@ -214,7 +213,7 @@ class Squares:
                 self.pas.remove(self.square_for_check)
                 print(f'bad with index {self.square_for_check} and coords {self.square_list[self.square_for_check]}')
             else:
-                print('empty', self.square_for_check)
+                print(f'already checked with index{self.square_for_check} and coords {self.square_list[self.square_for_check]}' )
 
 
     def draw_cat(self, player : Player, time, font : pygame.font.Font):

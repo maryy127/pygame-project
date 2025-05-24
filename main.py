@@ -41,7 +41,7 @@ time_loaded_added = False
 #rules
 rules_font1 = pygame.font.Font('fonts/Comfortaa.ttf', 24)
 header_r = font1.render('правила игры'.upper(), True, (220, 72, 161))
-text_rules_list = render_wrapped_text(w, header_r.get_height() + 70, f'Привет, {name}! Сегодня тебе предстоит сыграть в увлекательную игру. Тут тебе предстоит найти трофей, используя магическую силу рандома. Трофей располагается только в пяти квадратах из 15! У тебя есть всего пять жизней. Также тут есть злой лазер из королевства Меднобыковского, берегись eгo, он опасен. Hy что же, начинаем!', rules_font1, (230, 168, 199), 880, 19, (191, 0, 255), 1)
+text_rules_list = render_wrapped_text(w, header_r.get_height() + 100, f'Привет, {name}! Сегодня тебе предстоит сыграть в увлекательную игру. Тут тебе предстоит найти трофей, используя магическую силу рандома. Трофей располагается только в пяти квадратах из 15! У тебя есть всего пять жизней. Также тут есть злой лазер из королевства Zлой Кола, берегись eгo, он опасен. Hy что же, начинаем!', rules_font1, (230, 168, 199), 880, 19, (191, 0, 255), 1)
 press_to_c = font2.render('press any key to start the game'.upper(), True, (255, 255, 255))
 press_y = text_rules_list[-1][1][1] + text_rules_list[-1][0].get_height() + 47
 
@@ -90,9 +90,13 @@ squares = Squares(sq_list, screen)
 check_btn_fl = False
 
 # win
-win_text = font1.render('УРА ПОБЕДА!', True, (255, 215, 0))
+win_text = font1.render('УРА ПОБЕДА!', True, (255, 42, 42), (255, 255, 0))
+win_img = pygame.image.load('imgs/win.png')
+kubok = pygame.image.load('imgs/kubok.png')
+win_img.set_colorkey((255, 255, 255))
+win_img = pygame.transform.scale_by(win_img, 0.39)
 # Игровой цикл и флаг выполнения программы
-state = 'loading'
+state = 'level_complete'
 game_run = True
 
 while game_run:
@@ -104,12 +108,11 @@ while game_run:
         if event.type == pygame.QUIT:
             game_run = False
         if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
             if state == 'game':
-                pos = pygame.mouse.get_pos()
                 if (pos[0] >= 70 and pos[0] <= 70 + squares.check_btn.get_width()) and (pos[1] >= squares.y and pos[1] <= squares.y + squares.check_btn.get_height()):
                     check_btn_fl = True
-            if state == 'game_over' or state == 'level_complete':
-                pos = pygame.mouse.get_pos()
+            if state == 'game_over':
                 if (pos[0] >= w / 2 - 50 and pos[0] <= w / 2 - 50 + 100) and (pos[1] >= 400 and pos[1] <= 500):
                     player = Player(ghost_list, heart_list, 150, 115, 9, 5, screen, [140, 100, 800, 480], 'imgs/dead_player.png')
                     laser = Laser(0, 0, 900, 600, 150, laser_list, laser_shift_sound, 130)
@@ -120,6 +123,18 @@ while game_run:
                     game_start_time = current_time
                     wait_laser = randint(1600, 3000)
                     state = 'game'
+            if state == 'level_complete':
+                 if (pos[0] >= w / 2 - 50 and pos[0] <= w / 2 - 50 + 100) and (pos[1] >= 350 and pos[1] <= 350 + 100):
+                    player = Player(ghost_list, heart_list, 150, 115, 9, 5, screen, [140, 100, 800, 480], 'imgs/dead_player.png')
+                    laser = Laser(0, 0, 900, 600, 150, laser_list, laser_shift_sound, 130)
+                    squares = Squares(sq_list, screen)
+                    colider_fl = False
+                    new_laser = 0
+                    laser_fl = False
+                    game_start_time = current_time
+                    wait_laser = randint(1600, 3000)
+                    state = 'game'
+
 
     if state == 'loading':
         if bar_x < (480):
@@ -240,8 +255,11 @@ while game_run:
 
     elif state == 'level_complete':
         screen.fill((50, 168, 82))  
-        screen.blit(win_text, (w / 2 - win_text.get_width() / 2, 200))
-        screen.blit(restart_btn, (w / 2 - 50, 400))
+        screen.blit(win_img, (w/2 - win_img.get_width() / 2, h/2 - win_img.get_height() / 2))
+        screen.blit(kubok, (w/2 - kubok.get_width() / 2, h/2 - kubok.get_height() / 2))
+        screen.blit(win_text, (w / 2 - win_text.get_width() / 2, 190))
+        pygame.draw.rect(screen, (204, 20, 32), (w /2 - 50, 350, restart_btn.get_width(), restart_btn.get_height()), width=0, border_radius=70)
+        screen.blit(restart_btn, (w / 2 - 50, 350))
         
 
 
