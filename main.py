@@ -96,7 +96,7 @@ kubok = pygame.image.load('imgs/kubok.png')
 win_img.set_colorkey((255, 255, 255))
 win_img = pygame.transform.scale_by(win_img, 0.39)
 # Игровой цикл и флаг выполнения программы
-state = 'level_complete'
+state = 'loading'
 game_run = True
 
 while game_run:
