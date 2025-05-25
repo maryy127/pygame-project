@@ -122,6 +122,8 @@ while game_run:
                     laser_fl = False
                     game_start_time = current_time
                     wait_laser = randint(1600, 3000)
+                    print('-' * len('bad with index 11 and coords [280, 380]'))
+                    print('game restarted')
                     state = 'game'
             if state == 'level_complete':
                  if (pos[0] >= w / 2 - 50 and pos[0] <= w / 2 - 50 + 100) and (pos[1] >= 350 and pos[1] <= 350 + 100):
@@ -133,6 +135,8 @@ while game_run:
                     laser_fl = False
                     game_start_time = current_time
                     wait_laser = randint(1600, 3000)
+                     print('-' * len('bad with index 11 and coords [280, 380]'))
+                    print('game restarted')
                     state = 'game'
 
 
