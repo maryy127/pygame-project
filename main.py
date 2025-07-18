@@ -135,7 +135,7 @@ while game_run:
                     laser_fl = False
                     game_start_time = current_time
                     wait_laser = randint(1600, 3000)
-                     print('-' * len('bad with index 11 and coords [280, 380]'))
+                    print('-' * len('bad with index 11 and coords [280, 380]'))
                     print('game restarted')
                     state = 'game'
 
